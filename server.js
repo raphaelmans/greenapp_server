@@ -9,24 +9,30 @@ const rateLimit = require('express-rate-limit');
 const hpp = require('hpp');
 const cors = require('cors');
 const connectDB = require('./config/db');
+const errorHandler = require('./middleware/error');
+const passport = require('passport');
+const JwtStrategy = require('passport-jwt').Strategy;
+const ExtractJwt = require('passport-jwt').ExtractJwt;
 
 
 // Load env vars
 dotenv.config({ path: './config/config.env' });
 
+require('./passport');
 
 // Connect to database
 connectDB();
 
 // Route files
 const users = require('./routes/users');
-
+const auth = require('./routes/auth');
+const profile = require('./routes/profile');
 
 const app = express();
 
 
 app.use(express.json());
-
+app.use(express.urlencoded({ extended: true }));
 
 
 // Dev logging middleware
@@ -58,8 +64,12 @@ app.use(cors());
 
 // Mount routers
 app.use('/api/v1/users', users);
+app.use('/api/v1/auth', auth);
+app.use('/api/v1/profile',passport.authenticate('jwt', {session: false}), profile);
 
 
+
+app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(

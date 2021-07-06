@@ -36,15 +36,24 @@ UserSchema.pre('save', async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
 });
 // Encrypt password using bcrypt before updating the User Document
+
+
+
 UserSchema.pre('findOneAndUpdate', async function (next) {
   const mv = this.getUpdate();
 
+  console.log(mv);
   if (!('password' in mv)) {
       next();
   }
   const salt = await bcrypt.genSalt(10);
   mv.password = await bcrypt.hash(mv.password, salt);
 });
+
+
+UserSchema.methods.matchPassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
 module.exports = mongoose.model('User', UserSchema);
 
 
